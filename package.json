@@ -1,6 +1,6 @@
 {
   "name": "dok",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Image builder, tagger, and pusher for Docker",
   "main": "index.js",
   "bin": {

@@ -1,12 +1,19 @@
 #!/usr/bin/env zx
 
 async function main() {
+  const tag = argv._[1];
+  const dryRun = argv._[2] === "dry";
+
+  if (!tag) {
+    console.log('Usage: ');
+    console.log('  dok <tag> [dry]');
+
+    process.exit(-1);
+  }
+
   const dokfilePath = path.join(process.cwd(), ".dokfile");
   const dokFile = await fs.readFile(dokfilePath, "utf8");
   const parsedDokFile = JSON.parse(dokFile);
-
-  const tag = argv._[1];
-  const dryRun = argv._[2] === "dry";
 
   const baseImageName = parsedDokFile["image-name"];
   const baseTag = tag;
