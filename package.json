@@ -1,0 +1,15 @@
+{
+  "name": "dok",
+  "version": "0.0.0",
+  "description": "Image builder, tagger, and pusher for Docker",
+  "main": "index.js",
+  "bin": {
+    "dok": "./bin/build"  
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Alwin Arrasyid <alwin.ridd@gmail.com>",
+  "license": "MIT"
+}
