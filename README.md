@@ -38,7 +38,7 @@ In your project, create a `.dokfile` file with the following format:
 Then run:
 
 ```sh
-dok [dry]
+dok <tag> [dry]
 ```
 
 **Note**:
