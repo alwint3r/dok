@@ -26,7 +26,7 @@ async function main() {
   await buildImage(baseImageName, baseTag, dryRun);
 
   for (const tag of targetTags) {
-    tagImage(baseImageName, baseTag, baseImageName, tag, dryRun);
+    await tagImage(baseImageName, baseTag, baseImageName, tag, dryRun);
   }
 
   if (parsedDokFile["remote-url"]) {
