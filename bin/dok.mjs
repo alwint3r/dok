@@ -1,46 +1,54 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
+
+import "zx/globals";
+import DokfileValidator from "dokfile/validator";
+import DokfileParser from "dokfile/parser";
+
+const dokFileValidator = new DokfileValidator();
+const dokFileParser = new DokfileParser();
 
 async function main() {
-  const tag = argv._[1];
-  const dryRun = argv._[2] === "dry";
+  const tag = argv._[0];
+  const dryRun = argv._[1] === "dry";
 
   if (!tag) {
-    console.log('Usage: ');
-    console.log('  dok <tag> [dry]');
+    console.log("Usage: ");
+    console.log("  dok <tag> [dry]");
 
     process.exit(-1);
   }
 
   const dokfilePath = path.join(process.cwd(), ".dokfile");
   const dokFile = await fs.readFile(dokfilePath, "utf8");
-  const parsedDokFile = JSON.parse(dokFile);
+  dokFileValidator.validate(dokFile);
 
-  const baseImageName = parsedDokFile["image-name"];
-  const baseTag = tag;
+  const buildInstructions = dokFileParser.parse(dokFile, tag);
 
-  let remoteTags = [];
-  let remoteImageName = "";
+  await buildImage(
+    buildInstructions.baseImage,
+    buildInstructions.baseTag,
+    buildInstructions.buildArgs,
+    dryRun,
+  );
 
-  const targetTags = ["latest"];
-
-  await buildImage(baseImageName, baseTag, dryRun);
-
-  for (const tag of targetTags) {
-    await tagImage(baseImageName, baseTag, baseImageName, tag, dryRun);
+  for (const tag of buildInstructions.additionalBaseTags) {
+    await tagImage(
+      buildInstructions.baseImage,
+      buildInstructions.baseTag,
+      buildInstructions.baseImage,
+      tag,
+      dryRun
+    );
   }
 
-  if (parsedDokFile["remote-url"]) {
-    remoteTags = [baseTag, "latest"];
-
-    remoteImageName = `${parsedDokFile["remote-url"]}/${baseImageName}`;
-
+  if (buildInstructions.remoteImageName) {
     const builtImagesAndTags = [];
 
-    for (const tag of remoteTags) {
+    for (const tag of buildInstructions.remoteTags) {
       const result = await tagImage(
-        baseImageName,
-        baseTag,
-        remoteImageName,
+        buildInstructions.baseImage,
+        buildInstructions.baseTag,
+        buildInstructions.remoteImageName,
         tag,
         dryRun
       );
@@ -51,13 +59,16 @@ async function main() {
   }
 }
 
-async function buildImage(baseImageName, tag, dryRun) {
+async function buildImage(baseImageName, tag, buildArgs = [], dryRun = false) {
   const imageName = `${baseImageName}:${tag}`;
+  const buildArgsString = buildArgs.reduce((acc, { arg, value }) => {
+    return `${acc} --build-arg ${arg}=${value}`;
+  }, "");
 
-  console.log(`Building image ${imageName}`);
+  console.log(`Building image ${imageName} with args: ${buildArgsString}`);
 
   if (!dryRun) {
-    await $`docker build -t ${imageName} .`;
+    await $`docker build -t ${imageName} ${buildArgsString} .`;
   }
 
   return imageName;

@@ -1,4 +1,10 @@
 {
     "image-name": "dok",
-    "remote-url": "xcontainers.azurecr.io"
+    "remote-url": "xcontainers.azurecr.io",
+    "build": {
+        "args": {
+            "arg1": "arg_value",
+            "arg2": "arg2_value"
+        }
+    }
 }
