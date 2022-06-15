@@ -27,6 +27,7 @@ async function main() {
   await buildImage(
     buildInstructions.baseImage,
     buildInstructions.baseTag,
+    buildInstructions.dockerFileName || 'Dockerfile',
     buildInstructions.buildArgs,
     dryRun
   );
@@ -59,7 +60,7 @@ async function main() {
   }
 }
 
-async function buildImage(baseImageName, tag, buildArgs = [], dryRun = false) {
+async function buildImage(baseImageName, tag, dockerFile, buildArgs = [], dryRun = false) {
   const imageName = `${baseImageName}:${tag}`;
   const buildArgsString = buildArgs.map(
     (arg) => `--build-arg ${arg.arg}=${arg.value}`
@@ -71,7 +72,7 @@ async function buildImage(baseImageName, tag, buildArgs = [], dryRun = false) {
   );
 
   if (!dryRun) {
-    const cmd = `docker build ${buildArgsStringJoined} -t ${imageName} .`;
+    const cmd = `docker build ${buildArgsStringJoined} -t ${imageName} -f ${dockerFile} .`;
     await $([cmd]);
   }
 
