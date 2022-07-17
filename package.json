@@ -1,6 +1,6 @@
 {
   "name": "dok",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Image builder, tagger, and pusher for Docker",
   "bin": {
     "dok": "./bin/dok.mjs"
