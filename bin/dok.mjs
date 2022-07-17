@@ -9,11 +9,13 @@ const dokFileParser = new DokfileParser();
 
 async function main() {
   const tag = argv._[0];
-  const dryRun = argv._[1] === "dry";
+  const runMode = argv._[1] || 'full';
+  const shouldPush = ['full', 'pushOnly'].includes(runMode);
+  const shouldBuild = ['full', 'buildOnly'].includes(runMode);
 
   if (!tag) {
     console.log("Usage: ");
-    console.log("  dok <tag> [dry]");
+    console.log("  dok <tag> [full|buildOnly|pushOnly|dry]");
 
     process.exit(-1);
   }
@@ -29,7 +31,7 @@ async function main() {
     buildInstructions.baseTag,
     buildInstructions.dockerFileName || 'Dockerfile',
     buildInstructions.buildArgs,
-    dryRun
+    shouldBuild
   );
 
   for (const tag of buildInstructions.additionalBaseTags) {
@@ -38,7 +40,7 @@ async function main() {
       buildInstructions.baseTag,
       buildInstructions.baseImage,
       tag,
-      dryRun
+      shouldBuild
     );
   }
 
@@ -51,16 +53,16 @@ async function main() {
         buildInstructions.baseTag,
         buildInstructions.remoteImageName,
         tag,
-        dryRun
+        shouldBuild
       );
       builtImagesAndTags.push(result);
     }
 
-    await pushImage(builtImagesAndTags, dryRun);
+    await pushImage(builtImagesAndTags, shouldPush);
   }
 }
 
-async function buildImage(baseImageName, tag, dockerFile, buildArgs = [], dryRun = false) {
+async function buildImage(baseImageName, tag, dockerFile, buildArgs = [], shouldBuild = true) {
   const imageName = `${baseImageName}:${tag}`;
   const buildArgsString = buildArgs.map(
     (arg) => `--build-arg ${arg.arg}=${arg.value}`
@@ -71,7 +73,7 @@ async function buildImage(baseImageName, tag, dockerFile, buildArgs = [], dryRun
     `Building image ${imageName} with args: ${buildArgsStringJoined}`
   );
 
-  if (!dryRun) {
+  if (shouldBuild) {
     const cmd = `docker build ${buildArgsStringJoined} -t ${imageName} -f ${dockerFile} .`;
     await $([cmd]);
   }
@@ -84,25 +86,25 @@ async function tagImage(
   tag,
   targetImageName,
   targetTag,
-  dryRun
+  shouldBuild
 ) {
   const imageName = `${baseImageName}:${tag}`;
   const target = `${targetImageName}:${targetTag}`;
 
   console.log(`Tagging ${imageName} as ${target}`);
 
-  if (!dryRun) {
+  if (shouldBuild) {
     await $`docker tag ${imageName} ${target}`;
   }
 
   return target;
 }
 
-async function pushImage(tags, dryRun) {
+async function pushImage(tags, shouldPush) {
   for (const tag of tags) {
     console.log(`Pushing ${tag}`);
 
-    if (!dryRun) {
+    if (shouldPush) {
       await $`docker push ${tag}`;
     }
   }
