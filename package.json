@@ -1,20 +1,14 @@
 {
   "name": "dok",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Image builder, tagger, and pusher for Docker",
   "bin": {
     "dok": "./bin/dok.mjs"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "Alwin Arrasyid <alwin.ridd@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "dokfile-next": "github:alwint3r/dokfile-next"
-  },
-  "devDependencies": {
-    "rimraf": "^3.0.2"
   }
 }
