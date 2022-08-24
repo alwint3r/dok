@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 
+import { DokfileFactory, OperationsGenerator } from "dokfile-next";
 import "zx/globals";
-import DokfileValidator from "dokfile/validator";
-import DokfileParser from "dokfile/parser";
-
-const dokFileValidator = new DokfileValidator();
-const dokFileParser = new DokfileParser();
 
 async function main() {
   const tag = argv._[0];
@@ -21,92 +17,49 @@ async function main() {
   }
 
   const dokfilePath = path.join(process.cwd(), ".dokfile");
-  const dokFile = await fs.readFile(dokfilePath, "utf8");
-  dokFileValidator.validate(dokFile);
+  const dokfileContent = await fs.readFile(dokfilePath, "utf8");
+  const dokfile = DokfileFactory.fromJson(dokfileContent);
+  const operations = OperationsGenerator.fromDokfile(dokfile, tag);
 
-  const buildInstructions = dokFileParser.parse(dokFile, tag);
-
-  await buildImage(
-    buildInstructions.baseImage,
-    buildInstructions.baseTag,
-    buildInstructions.dockerFileName || 'Dockerfile',
-    buildInstructions.buildArgs,
-    shouldBuild
-  );
-
-  for (const tag of buildInstructions.additionalBaseTags) {
-    await tagImage(
-      buildInstructions.baseImage,
-      buildInstructions.baseTag,
-      buildInstructions.baseImage,
-      tag,
-      shouldBuild
-    );
+  for (const op of operations.build) {
+    await buildImage(op, shouldBuild);
   }
 
-  if (buildInstructions.remoteImageName) {
-    const builtImagesAndTags = [];
+  for (const op of operations.tag) {
+    await tagImage(op, shouldBuild);
+  }
 
-    for (const tag of buildInstructions.remoteTags) {
-      const result = await tagImage(
-        buildInstructions.baseImage,
-        buildInstructions.baseTag,
-        buildInstructions.remoteImageName,
-        tag,
-        shouldBuild
-      );
-      builtImagesAndTags.push(result);
-    }
-
-    await pushImage(builtImagesAndTags, shouldPush);
+  for (const op of operations.tag) {
+    await pushImage(op, shouldPush);
   }
 }
 
-async function buildImage(baseImageName, tag, dockerFile, buildArgs = [], shouldBuild = true) {
-  const imageName = `${baseImageName}:${tag}`;
-  const buildArgsString = buildArgs.map(
-    (arg) => `--build-arg ${arg.arg}=${arg.value}`
-  );
-  const buildArgsStringJoined = buildArgsString.join(" ");
+async function buildImage(buildOperation, shouldBuild = true) {
+  const args = buildOperation.build.args;
+  const argsKeys = Object.keys(args);
+  const joinedArgs = argsKeys.map((argKey) => `--build-arg ${argKey}=${args[argKey]}`).join(' ');
 
-  console.log(
-    `Building image ${imageName} with args: ${buildArgsStringJoined}`
-  );
+  console.log(`Building ${buildOperation.target} with args: ${joinedArgs}`);
 
   if (shouldBuild) {
-    const cmd = `docker build ${buildArgsStringJoined} -t ${imageName} -f ${dockerFile} .`;
+    const cmd = `docker build ${joinedArgs} -t ${buildOperation.target} -f ${buildOperation.build.dockerfile} .`;
     await $([cmd]);
   }
-
-  return imageName;
 }
 
-async function tagImage(
-  baseImageName,
-  tag,
-  targetImageName,
-  targetTag,
-  shouldBuild
-) {
-  const imageName = `${baseImageName}:${tag}`;
-  const target = `${targetImageName}:${targetTag}`;
+async function tagImage(tagOperation, shouldTag = true) {
+  console.log(`Tagging ${tagOperation.fullTag} from ${tagOperation.from.fullTag}`);
 
-  console.log(`Tagging ${imageName} as ${target}`);
-
-  if (shouldBuild) {
-    await $`docker tag ${imageName} ${target}`;
+  if (shouldTag) {
+    await $`docker tag ${tagOperation.from.fullTag} ${tagOperation.fullTag}`;
   }
-
-  return target;
 }
 
-async function pushImage(tags, shouldPush) {
-  for (const tag of tags) {
-    console.log(`Pushing ${tag}`);
+async function pushImage(tagOperation, shouldPublish = true) {
+  console.log(`Pushing ${tagOperation.fullTag}`)
 
-    if (shouldPush) {
-      await $`docker push ${tag}`;
-    }
+  if (shouldPublish && tagOperation.remote) {
+    await $`docker push ${tagOperation.fullTag}`;
   }
 }
 

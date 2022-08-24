@@ -12,6 +12,9 @@
   "author": "Alwin Arrasyid <alwin.ridd@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "dokfile": "github:alwint3r/dokfile"
+    "dokfile-next": "github:alwint3r/dokfile-next"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
   }
 }

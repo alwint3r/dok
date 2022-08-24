@@ -1,10 +1,23 @@
 {
-    "image-name": "dok",
-    "remote-url": "xcontainers.azurecr.io",
-    "build": {
-        "args": {
-            "arg1": "arg_value",
-            "arg2": "arg2_value"
+    "imageName": "dok",
+    "remoteUrl": "xcontainers.azurecr.io",
+    "profiles": [
+        {
+            "id": "default",
+            "asLatest": true,
+            "build": {
+                "dockerfile": "Dockerfile",
+                "args" : {}
+            }
+        },
+        {
+            "id": "httponly",
+            "asLatest": false,
+            "build": {
+                "args": {
+                    "httponly": "yes"
+                }
+            }
         }
-    }
+    ]
 }
