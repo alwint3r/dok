@@ -32,12 +32,12 @@ Create a `.dokfile` file in the same directory with the following format:
 
 ```
 {
-    "image-name": "",
-    "remote-url": ""
+    "imageName": "",
+    "remoteUrl": ""
 }
 ```
 
-You may omit the `remote-url` if you are building and deploying locally, dok will not push the image to remote repository in this case.
+You may omit the `remoteUrl` if you are building and deploying locally, dok will not push the image to remote repository in this case. Please refer to the provided `.dokfile` in this repository for a complete example.
 
 For example, you want to build, tag, and push the docker image with `v1.0.0` tag. Here's the complete command:
 
