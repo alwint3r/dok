@@ -5,9 +5,9 @@ import "zx/globals";
 
 async function main() {
   const tag = argv._[0];
-  const runMode = argv._[1] || 'full';
-  const shouldPush = ['full', 'pushOnly'].includes(runMode);
-  const shouldBuild = ['full', 'buildOnly'].includes(runMode);
+  const runMode = argv._[1] || "full";
+  const shouldPush = ["full", "pushOnly"].includes(runMode);
+  const shouldBuild = ["full", "buildOnly"].includes(runMode);
 
   if (!tag) {
     console.log("Usage: ");
@@ -29,7 +29,7 @@ async function main() {
     await tagImage(op, shouldBuild);
   }
 
-  for (const op of operations.tag) {
+  for (const op of operations.push) {
     await pushImage(op, shouldPush);
   }
 }
@@ -37,7 +37,9 @@ async function main() {
 async function buildImage(buildOperation, shouldBuild = true) {
   const args = buildOperation.build.args;
   const argsKeys = Object.keys(args);
-  const joinedArgs = argsKeys.map((argKey) => `--build-arg ${argKey}=${args[argKey]}`).join(' ');
+  const joinedArgs = argsKeys
+    .map((argKey) => `--build-arg ${argKey}=${args[argKey]}`)
+    .join(" ");
 
   console.log(`Building ${buildOperation.target} with args: ${joinedArgs}`);
 
@@ -48,18 +50,20 @@ async function buildImage(buildOperation, shouldBuild = true) {
 }
 
 async function tagImage(tagOperation, shouldTag = true) {
-  console.log(`Tagging ${tagOperation.fullTag} from ${tagOperation.from.fullTag}`);
+  console.log(
+    `Tagging ${tagOperation.fullTag} from ${tagOperation.from.fullTag}`
+  );
 
   if (shouldTag) {
     await $`docker tag ${tagOperation.from.fullTag} ${tagOperation.fullTag}`;
   }
 }
 
-async function pushImage(tagOperation, shouldPublish = true) {
-  console.log(`Pushing ${tagOperation.fullTag}`)
+async function pushImage(pushOperation, shouldPublish = true) {
+  console.log(`Pushing ${pushOperation.target}`);
 
-  if (shouldPublish && tagOperation.remote) {
-    await $`docker push ${tagOperation.fullTag}`;
+  if (shouldPublish) {
+    await $`docker push ${pushOperation.target}`;
   }
 }
 
