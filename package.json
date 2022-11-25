@@ -9,6 +9,7 @@
   "author": "Alwin Arrasyid <alwin.ridd@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "dokfile-next": "github:alwint3r/dokfile-next"
+    "dokfile-next": "github:alwint3r/dokfile-next",
+    "zx": "^7.1.1"
   }
 }
