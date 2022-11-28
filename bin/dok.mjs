@@ -38,13 +38,17 @@ async function buildImage(buildOperation, shouldBuild = true) {
   const args = buildOperation.build.args;
   const argsKeys = Object.keys(args);
   const joinedArgs = argsKeys
-    .map((argKey) => `--build-arg ${argKey}=${args[argKey]}`)
+    .map((argKey) => `--build-arg ${argKey}="${args[argKey]}"`)
+    .join(" ");
+  const extraArgs = buildOperation.build.extraArgs;
+  const extraArgsKeys = Object.keys(extraArgs);
+  const extraArgsJoined = extraArgsKeys.map((key) => `--${key}=${extraArgs[key]}`)
     .join(" ");
 
-  console.log(`Building ${buildOperation.target} with args: ${joinedArgs}`);
+  console.log(`Building ${buildOperation.target} with args: ${joinedArgs} and ${extraArgsJoined}`);
 
   if (shouldBuild) {
-    const cmd = `docker build ${joinedArgs} -t ${buildOperation.target} -f ${buildOperation.build.dockerfile} .`;
+    const cmd = `docker build ${joinedArgs} -t ${buildOperation.target} -f ${buildOperation.build.dockerfile} ${extraArgsJoined} .`;
     await $([cmd]);
   }
 }
